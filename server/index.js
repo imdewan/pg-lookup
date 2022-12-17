@@ -18,7 +18,7 @@ var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: 'bunch.of.devs@gmail.com',
-      pass: 'devs@98765'
+      pass: 'prpljkmoannjuros'
     }
 });
 
@@ -45,17 +45,39 @@ app.get('/session', function(req, res){
    }
 });
 app.get('/login', function(req, res){
-    
+    var hashedpwd = sha256(req.body.password);
+    con.query("SELECT * FROM users WHERE email = '"+req.body.email+"' AND activation='activated' AND password = '"+hashedpwd+"'", function (err, result) {
+        if (err) throw err;
+        console.log(result);
+        if (typeof result !== 'undefined' && result > 0) {
+            req.session.loggedin="1";
+            res.send(`<script>
+                window.alert("Logged in");
+                window.location.href="http://localhost:3000/";
+                </script>`);
+        }else{
+            res.send(`<script>
+                window.alert("Wrong Details or Account not activated");
+                window.location.href="http://localhost:3000/login";
+                </script>`);
+        }
+      });
  });
  app.get('/auth', function(req, res){
     con.query("SELECT * FROM users WHERE email = '"+req.query.u+"' AND activation = '"+req.query.a+"'", function (err, result) {
         if (err) throw err;
         console.log(result);
         if (typeof result !== 'undefined' && result > 0) {
+            res.send("Failed");
+        }else{
             var sql = "UPDATE users SET activation = 'activated' WHERE email = '"+req.query.u+"'";
             con.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log(result.affectedRows + " record(s) updated");
+                res.send(`<script>
+                window.alert("Account Activated");
+                window.location.href="http://localhost:3000/login";
+                </script>`);
             });
         }
       });
@@ -64,14 +86,20 @@ app.get('/login', function(req, res){
     con.connect(function(err) {
         if (err) throw err;
         console.log(req.body.name);
-        con.query("SELECT * FROM users WHERE email = '"+req.query.u+"' AND activation = '"+req.query.a+"'", function (err, result) {
+        con.query("SELECT * FROM users WHERE email = '"+req.body.email+"'", function (err, result) {
             if (err) throw err;
             console.log(result);
-            if (typeof result === 'undefined' || result == 0) {
+            if (typeof result !== 'undefined' && result > 0) {
+                res.send(`<script>
+                window.alert("Already Registered");
+                window.location.href="http://localhost:3000/login";
+                </script>`);
+
+            }else{
                 var hashedpwd = sha256(req.body.password);
                 var activation = crypto.randomBytes(16).toString("hex");
-                var sql = "INSERT INTO users (name, email, password, gender, age, address, phone, activation) VALUES ('"+req.body.name+"','"+req.body.email+"','"+hashedpwd+"','"+req.body.gender+"','"+req.body.age+"','"+req.body.address+"','"+req.body.phone+",'"+activation+"')";
-                con.query(sql, function (err, result) {
+                var sql = "INSERT INTO users (name, email, password, gender, age, activation, phone) VALUES ('"+req.body.name+"','"+req.body.email+"','"+hashedpwd+"','"+req.body.gender+"','"+req.body.age+"','"+activation+"','"+req.body.phone+"')";
+        con.query(sql, function (err, result) {
                 if (err) throw err;
                 console.log("1 record inserted");
                 var mailOptions = {
@@ -85,14 +113,17 @@ app.get('/login', function(req, res){
                     console.log(error);
                     } else {
                     console.log('Email sent: ' + info.response);
+                    res.send(`<script>
+                window.alert("Activation Email Sent");
+                window.location.href="http://localhost:3000/login";
+                </script>`);
+
                     }
                 });
                 });
-            }else{
-                res.send("Already Registered");
             }
           });
-        
+       
       });
  });
 
