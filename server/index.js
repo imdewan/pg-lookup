@@ -3,6 +3,7 @@ const express = require('express');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var mysql = require('mysql');
+var cors = require('cors');
 var nodemailer = require('nodemailer');
 const app = express();
 const port = 9000;
@@ -30,6 +31,15 @@ app.get('/', (req, res) => {
   res.send('None!');
 });
 
+app.use(cors(), function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "http://localhost:3000"); // update to match the domain you will make the request from
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    next();
+  });
+
 app.use(cookieParser());
 app.use(session({secret: "Shh, its a secret!"}));
 
@@ -44,13 +54,13 @@ app.get('/session', function(req, res){
     res.send("0");
    }
 });
-app.get('/login', function(req, res){
+app.post('/login', function(req, res){
     var hashedpwd = sha256(req.body.password);
     con.query("SELECT * FROM users WHERE email = '"+req.body.email+"' AND activation='activated' AND password = '"+hashedpwd+"'", function (err, result) {
         if (err) throw err;
         console.log(result);
-        if (typeof result !== 'undefined' && result > 0) {
-            req.session.loggedin="1";
+        if (result.length > 0) {
+            
             res.send(`<script>
                 window.alert("Logged in");
                 window.location.href="http://localhost:3000/";
@@ -82,9 +92,45 @@ app.get('/login', function(req, res){
         }
       });
  });
+
+ app.post('/addpg', function(req, res){
+            var hashedpwd = sha256(req.body.password);
+            var sql = "INSERT INTO pgs (name, email, password, advance, payment, lat,lng, contact) VALUES ('"+req.body.name+"','"+req.body.email+"','"+hashedpwd+"','"+req.body.advance+"','"+req.body.payment+"','"+req.body.latitude+"','"+req.body.longitude+"','"+req.body.phone+"')";
+            con.query(sql, function (err, result) {
+                if (err) throw err;
+                console.log(result.affectedRows + " record(s) updated");
+                res.send(`<script>
+                window.alert("PG Uploaded");
+                window.location.href="http://localhost:3000/";
+                </script>`);
+            });
+    
+ });
+
+ app.get('/getpgs', function(req, res){
+    con.query("SELECT lat,lng FROM pgs", function (err, result) {
+        if (err) throw err;
+        res.send(result);
+    });
+});
+
+app.get('/pgdetails', function(req, res){
+    con.query("SELECT * FROM pgs", function (err, result) {
+        if (err) throw err;
+        res.send(result);
+    });
+});
+
+app.get('/getpgname', function(req, res){
+    con.query("SELECT name FROM pgs", function (err, result) {
+        if (err) throw err;
+        res.send(result);
+    });
+
+});
+
  app.post('/register', function(req, res){
     con.connect(function(err) {
-        if (err) throw err;
         console.log(req.body.name);
         con.query("SELECT * FROM users WHERE email = '"+req.body.email+"'", function (err, result) {
             if (err) throw err;

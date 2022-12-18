@@ -9,7 +9,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 const NavBarHead = () => {
 return (
-    <div style={{backgroundImage: "linear-gradient(to right, #610acd , #1acbe3)"}}>
+    <div style={{backgroundImage: "linear-gradient(to right, #610acd , black)"}}>
       <Navbar bg="none" variant="dark" expand="lg">
         <Container style={{marginLeft:"0"}}>
           <Navbar.Brand href="#home">
@@ -21,7 +21,7 @@ return (
               className="d-inline-block align-top"
               style={{borderRadius:"5px"}}
             />
-            <strong style={{color: "white", fontSize:"30px",marginLeft:"10px"}}>PG-Assistance</strong>
+            <strong style={{color: "white", fontSize:"30px",marginLeft:"10px"}}>PG-LookUp</strong>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">

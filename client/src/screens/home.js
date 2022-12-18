@@ -1,28 +1,67 @@
 import React, { Component } from 'react';
 import NavBarHead from '../nav';
+import axios from "axios";
 import useState from "react";
 import { withScriptjs, InfoWindow, withGoogleMap, GoogleMap, Marker } from "react-google-maps";
-
+import { useGeolocated } from "react-geolocated";
 
 const Home = () => {
+    const { coords, isGeolocationAvailable, isGeolocationEnabled } =
+    useGeolocated({
+        positionOptions: {
+            enableHighAccuracy: false,
+        },
+        userDecisionTimeout: 5000,
+    });
 
+    const [post, setPost] = React.useState(null);
+
+  React.useEffect(() => {
+    axios.get("http://localhost:9000/getpgs").then((response) => {
+      setPost(response.data);
+    });
+  }, []);
+  const [post1, setPost1] = React.useState(null);
+
+  React.useEffect(() => {
+    axios.get("http://localhost:9000/getpgname").then((response) => {
+      setPost1(response.data);
+    });
+  }, []);
+    
+    //var l1 = coords.latitude;
+    //var l2 = coords.longitude;
+    var mrk=[];
+    console.log(post);
+    mrk=post
+
+    var state = {
+    marks: post,
+    names:post1,
+    center:{ lat: 0, lng: 0 }
+    
+    };
 return (
 	<div>
     <NavBarHead />
-    <ReportsPage />
+    <ReportsPage state={state}/>
 	</div>
 );
 };
 
+
+
 const handleActiveMarker = (marker) => {
+    window.location.href = "/details?lat="+marker.lat+"&lng="+marker.lng;
     console.log(marker);
+    
   };
 
 const Map = withScriptjs(
     withGoogleMap(props => (
         <GoogleMap
             defaultZoom={12}
-            defaultCenter={{ lat: 12.840994, lng: 77.516565 }}
+            defaultCenter={props.center}
             
         >
             {props.marks.map((mark, index) => (
@@ -33,8 +72,8 @@ const Map = withScriptjs(
                     onClick={() => handleActiveMarker(mark)}    
                 >
                 
-                    <InfoWindow >
-                      <div>{props.names[index]}</div>
+                    <InfoWindow onCloseClick={() => console.log("ok")}>
+                      <div>{props.names[index].name}</div>
                     </InfoWindow>
                   
                   </Marker>
@@ -43,19 +82,12 @@ const Map = withScriptjs(
     ))
 );
 
+
 class ReportsPage extends Component {
-    state = {
-        marks: [{ lat: 12.840994, lng: 77.516565 }
-  , { lat: 12.849488, lng: 77.521457 }
-  ],
-  names:["ok1","bk2"]
-  
-    };
-
-   
-
+    
+    
     render() {
-        const { marks,names } = this.state;
+        const { center,marks,names } = this.props.state;
         return (
             <div>
                 
@@ -64,14 +96,16 @@ class ReportsPage extends Component {
                     loadingElement={<div style={{ height: `100%` }} />}
                     containerElement={<div style={{ height: `90vh` }} />}
                     mapElement={<div style={{ height: `100%` }} />}
-                    onClick={handleActiveMarker(marks)}
+                    //onClick={handleActiveMarker(marks)}
                     marks={marks}
                     names={names}
+                    center={center}
                 />;
             </div>
         );
     }
 }
+
 
 
 export default Home;
